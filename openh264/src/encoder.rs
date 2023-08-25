@@ -154,6 +154,20 @@ impl EncoderConfig {
         }
     }
 
+    pub fn new_(width: u32, height: u32, target_bitrate: u32, color_format: EVideoFormatType) -> Self {
+        Self {
+            width,
+            height,
+            enable_skip_frame: true,
+            target_bitrate,
+            enable_denoise: false,
+            debug: 0,
+            data_format: color_format,
+            max_frame_rate: 0.0,
+            rate_control_mode: Default::default(),
+        }
+    }
+
     /// Sets the requested bit rate in bits per second.
     pub fn set_bitrate_bps(mut self, bps: u32) -> Self {
         self.target_bitrate = bps;
@@ -237,7 +251,7 @@ impl Encoder {
     pub fn encode<T: YUVSource>(
         &mut self,
         yuv_source: &T,
-        colour_format: EVideoFormatType,
+        color_format: EVideoFormatType,
     ) -> Result<EncodedBitStream<'_>, Error> {
         assert_eq!(yuv_source.width(), self.params.iPicWidth);
         assert_eq!(yuv_source.height(), self.params.iPicHeight);
@@ -245,7 +259,7 @@ impl Encoder {
         // Converting *const u8 to *mut u8 should be fine because the encoder _should_
         // only read these arrays (TODO: needs verification).
         let source = SSourcePicture {
-            iColorFormat: colour_format,
+            iColorFormat: color_format,
             iStride: [yuv_source.y_stride(), yuv_source.u_stride(), yuv_source.v_stride(), 0],
             pData: [
                 yuv_source.y().as_ptr() as *mut c_uchar,
